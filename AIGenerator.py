@@ -5,6 +5,7 @@ from config import API_KEY, SECRET_KEY
 import base64 
 from PIL import Image 
 from io import BytesIO 
+import os 
 
 class FusionBrainAPI:
     def __init__(self, url, api_key, secret_key):
@@ -90,11 +91,10 @@ class FusionBrainAPI:
             decoded_data = base64.b64decode(base64_string)
             
             return BytesIO(decoded_data) 
-        
+
         except Exception as e:
             print(f"❌ Görüntü oluşturma/veri çekme hatası: {e}")
             return None
-
 
 def generate_image_from_text(prompt, api_url, api_key, secret_key):
     api = FusionBrainAPI(api_url, api_key, secret_key)
@@ -107,7 +107,6 @@ def generate_image_from_text(prompt, api_url, api_key, secret_key):
         return None
 
     image_url = files[0] if isinstance(files, list) else files
-
     response = requests.get(image_url)  
     if response.status_code == 200: 
         with open("output.png", "wb") as f: 
@@ -120,9 +119,7 @@ def generate_image_from_text(prompt, api_url, api_key, secret_key):
             for item in files:
                f.write(f"{item}\n")
  
-
     return image_url    
-
 
 if __name__ == '__main__':  
     
@@ -132,16 +129,22 @@ if __name__ == '__main__':
         SECRET_KEY
     )
     
+    base64_filename = "test_base64_output.png"
     try:
         pipeline_id = api.get_pipeline()
         uuid = api.generate("A futuristic city at sunset with flying cars", pipeline_id)
         base64_data = api.check_generation(uuid)[0] 
         
         if base64_data:
-            api.save_image(base64_data, "test_base64_output.png")
+            api.save_image(base64_data, base64_filename)
     except Exception:
         pass
+    finally:
+        if os.path.exists(base64_filename):
+            os.remove(base64_filename)
+            print(f"✅ Diskten silindi: {base64_filename}")
 
+    url_filename = "output.png"
     image_link = generate_image_from_text(  
         "A futuristic city at sunset with flying cars", 
         "https://api-key.fusionbrain.ai/",  
@@ -149,6 +152,10 @@ if __name__ == '__main__':
         SECRET_KEY
     )
     print("Görsel bağlantısı:", image_link)
+    
+    if os.path.exists(url_filename):
+        os.remove(url_filename)
+        print(f"✅ Diskten silindi: {url_filename}")
 
     try:
         binary_data = api.get_image_binary("A single red poppy field in the wind")
