@@ -25,7 +25,7 @@ async def handle_message(message):
             return
 
         try:
-            await message.channel.send(
+            loading_message = await message.channel.send(
                 f"⌛ **'{prompt}'** isteğiniz işleniyor. Lütfen bekleyin..."
             )
 
@@ -33,13 +33,16 @@ async def handle_message(message):
 
             if image_binary:
                 discord_file = File(image_binary, filename='generated_image.png')
-                await message.channel.send(
-                    f"✨ İşte **'{prompt}'** isteğiniz için oluşturulan görsel:", 
-                    file=discord_file
+                
+                await loading_message.edit(
+                    content=f"✨ İşte **'{prompt}'** isteğiniz için oluşturulan görsel:"
                 )
+                
+                await message.channel.send(file=discord_file)
+                
             else:
-                await message.channel.send(
-                    "❌ Üzgünüm, görüntü oluşturulamadı. Lütfen isteği kontrol edin."
+                await loading_message.edit(
+                    content="❌ Üzgünüm, görüntü oluşturulamadı. Lütfen isteği kontrol edin."
                 )
 
         except Exception as e:
